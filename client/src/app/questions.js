@@ -1,12 +1,15 @@
 import React from "react";
 import { Container, Row, Col, Card, Button, Modal } from "react-bootstrap";
 import { getQuestions, getAnswer } from "../api/api";
+import Choices from "./choices";
+import Result from "./result";
 
-class Question extends React.Component {
+class Questions extends React.Component {
   state = {
     questions: [],
     answers: [],
-    modalShow: false
+    modalShow: false,
+    restart: 0
   };
 
   async componentDidMount() {
@@ -23,7 +26,7 @@ class Question extends React.Component {
     const { answer } = await getAnswer(question);
     //ობიექტის მომზადება
     let myAnswer = { question: question, answer: answer.id === answerValue };
-    //ტეტის დაკლონვა
+    //ტესტის ასლის შექმნა
     let answers = [...this.state.answers];
     // მსგავსი ობიექტის ინდექსის მოძებნა
     let index = answers.findIndex(x => x.question === question);
@@ -39,11 +42,25 @@ class Question extends React.Component {
 
   handleDone = () => {
     this.setState({ modalShow: true });
-    console.log("done", this.state);
   };
 
+  // shuffle(array) {
+  //   let ctr = array.length;
+  //   let temp;
+  //   let index;
+  //   while (ctr > 0) {
+  //     index = Math.floor(Math.random() * ctr);
+  //     ctr--;
+  //     temp = array[ctr];
+  //     array[ctr] = array[index];
+  //     array[index] = temp;
+  //   }
+  //   return array;
+  // }
+
   handleClose = () => {
-    this.setState({ modalShow: false });
+    //ტესტის თავიდან დაწყების ლოგიკა
+    this.setState({ modalShow: false, answers: [], restart: Math.random() });
   };
 
   render() {
@@ -52,7 +69,7 @@ class Question extends React.Component {
       <Container>
         <h2>ტესტი</h2>
         {questions &&
-          questions.map(q => {
+          questions.map((q, i) => {
             return (
               <Row key={q.id}>
                 <Col>
@@ -60,22 +77,12 @@ class Question extends React.Component {
                     <Card.Body>
                       <Card.Title>{q.id}</Card.Title>
                       <Card.Text> {q.question}</Card.Text>
-                      <ul key={q.id}>
-                        {q.choices.map(c => {
-                          return (
-                            <li key={c.id}>
-                              <input
-                                type="radio"
-                                name={`answer${q.id}`}
-                                value={c.id}
-                                style={{ marginRight: "10px" }}
-                                onChange={() => this.handleAnswer(q.id, c.id)}
-                              />
-                              {c.value}
-                            </li>
-                          );
-                        })}
-                      </ul>
+                      <Choices
+                        key={this.state.restart} //რესტარტის შემთხვევაში მიენიჭება სხვა რიცხვი და გადაიხატება ეს კომპონენტი
+                        questionId={q.id}
+                        choices={q.choices}
+                        handleAnswer={this.handleAnswer}
+                      />
                     </Card.Body>
                   </Card>
                   <br />
@@ -90,7 +97,9 @@ class Question extends React.Component {
           <Modal.Header closeButton>
             <Modal.Title>შედეგი</Modal.Title>
           </Modal.Header>
-          <Modal.Body>შედეგის გამოტანა!</Modal.Body>
+          <Modal.Body>
+            <Result answers={this.state.answers} />
+          </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={this.handleClose}>
               დახურვა
@@ -104,4 +113,4 @@ class Question extends React.Component {
   }
 }
 
-export default Question;
+export default Questions;
