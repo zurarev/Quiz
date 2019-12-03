@@ -1,43 +1,35 @@
-import React from "react";
+import React, { Component } from "react";
 import { Container, Row, Col, Card, Button, Modal } from "react-bootstrap";
-import { getQuestions, getAnswer } from "../api/api";
+import { connect } from "react-redux";
+import {
+  loadQuestions,
+  setAnswer,
+  increment,
+  decrement
+} from "../actions/Actions";
 import Choices from "./choices";
 import Result from "./result";
 
-class Questions extends React.Component {
+class Questions extends Component {
   state = {
-    questions: [],
-    answers: [],
     modalShow: false,
     restart: 0
   };
 
   async componentDidMount() {
     try {
-      const questions = await getQuestions();
-      this.setState({ questions });
+      await this.props.loadQuestions();
     } catch (err) {
       console.log(err);
     }
   }
 
   handleAnswer = async (question, answerValue) => {
-    //სერვისიდან წამოღება
-    const { answer } = await getAnswer(question);
-    //ობიექტის მომზადება
-    let myAnswer = { question: question, answer: answer.id === answerValue };
-    //ტესტის ასლის შექმნა
-    let answers = [...this.state.answers];
-    // მსგავსი ობიექტის ინდექსის მოძებნა
-    let index = answers.findIndex(x => x.question === question);
-    //შემოწმება ინდექსის და არსებობის შემთხვევაში განახლება და წინააღმდეგ შემთხვევაში ჩაწერა
-    if (index !== -1) {
-      answers[index] = myAnswer;
-    } else {
-      answers.push(myAnswer);
+    try {
+      await this.props.setAnswer(question, answerValue);
+    } catch (err) {
+      console.log(err);
     }
-    this.setState({ answers });
-    console.log("answers", this.state.answers);
   };
 
   handleDone = () => {
@@ -60,13 +52,24 @@ class Questions extends React.Component {
 
   handleClose = () => {
     //ტესტის თავიდან დაწყების ლოგიკა
-    this.setState({ modalShow: false, answers: [], restart: Math.random() });
+    this.setState({
+      modalShow: false,
+      restart: Math.random()
+    });
   };
 
   render() {
-    const { questions } = this.state;
+    const { questions } = this.props.questionsReducer;
+    const { answers } = this.props.answersReducer;
+    const { counter } = this.props.counterReducer;
     return (
       <Container>
+        <div>
+          <h1>{this.props.name}</h1>
+          <h1>{counter}</h1>
+          <button onClick={this.props.decrement}>decrement</button>
+          <button onClick={this.props.increment}>increment</button>
+        </div>
         <h2>ტესტი</h2>
         {questions &&
           questions.map((q, i) => {
@@ -98,7 +101,7 @@ class Questions extends React.Component {
             <Modal.Title>შედეგი</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Result answers={this.state.answers} />
+            <Result answers={answers} />
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={this.handleClose}>
@@ -113,4 +116,14 @@ class Questions extends React.Component {
   }
 }
 
-export default Questions;
+function mapStateToProps(state) {
+  console.log("state", state);
+  return state;
+}
+
+export default connect(mapStateToProps, {
+  loadQuestions,
+  setAnswer,
+  increment,
+  decrement
+})(Questions);
