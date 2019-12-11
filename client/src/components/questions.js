@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-import { Container, Row, Col, Card, Button, Modal } from "react-bootstrap";
+import { withRouter } from "react-router";
+import { Row, Col, Card, Button, Modal } from "react-bootstrap";
+import { NavLink } from "react-router-dom";
 import { connect } from "react-redux";
 import {
   loadQuestions,
@@ -58,19 +60,26 @@ class Questions extends Component {
     });
   };
 
+  onBackClick = () => {
+    this.props.history.goBack();
+  };
+
   render() {
     const { questions } = this.props.questionsReducer;
     const { answers } = this.props.answersReducer;
-    const { counter } = this.props.counterReducer;
+    //const { counter } = this.props.counterReducer;
     return (
-      <Container>
+      <div>
         <div>
           <h1>{this.props.name}</h1>
-          <h1>{counter}</h1>
+          {/* <h1>{counter}</h1>
           <button onClick={this.props.decrement}>decrement</button>
-          <button onClick={this.props.increment}>increment</button>
+          <button onClick={this.props.increment}>increment</button> */}
+          <button className="btn btn-info btn-sm" onClick={this.onBackClick}>
+            დაბრუნება
+          </button>
         </div>
-        <h2>ტესტი</h2>
+        <h2>{this.props.title}</h2>
         {questions &&
           questions.map((q, i) => {
             return (
@@ -94,7 +103,8 @@ class Questions extends Component {
             );
           })}
 
-        <Button onClick={this.handleDone}>ტესტის დასრულება</Button>
+        {/* <Button onClick={this.handleDone}>ტესტის დასრულება</Button> */}
+        <NavLink to="/Result">ტესტის დასრულება</NavLink>
 
         <Modal show={this.state.modalShow} onHide={this.handleClose}>
           <Modal.Header closeButton>
@@ -111,19 +121,21 @@ class Questions extends Component {
         </Modal>
 
         <br />
-      </Container>
+      </div>
     );
   }
 }
 
 function mapStateToProps(state) {
-  console.log("state", state);
+  //console.log("state", state);
   return state;
 }
 
-export default connect(mapStateToProps, {
-  loadQuestions,
-  setAnswer,
-  increment,
-  decrement
-})(Questions);
+export default withRouter(
+  connect(mapStateToProps, {
+    loadQuestions,
+    setAnswer
+    //increment,
+    //decrement
+  })(Questions)
+);
